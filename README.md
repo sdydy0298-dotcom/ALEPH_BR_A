@@ -1,3 +1,28 @@
-# ALEPH BR-A
+# ALEPH BR-A — 서동연의 포트폴리오
 
-Portfolio project bootstrap. See full documentation after implementation.
+GitHub: https://github.com/sdydy0298-dotcom/ALEPH_BR_A
+
+## 구성
+- `index.html`, `style.css`, `script.js`: 로그인 없는 공개 포트폴리오
+- `research.html`: T10 DNS-over-TLS 논문 결과 요약 (원저자의 공개 실험 기록 2차 재분석)
+- `documents/*.html`: 누구나 열 수 있는 이력서·자기소개서·경력기술서의 웹 버전
+- `updater/generate.py`: Python 표준 라이브러리만 사용하는 로컬 자동 갱신 장치
+- 별도로 제공하는 제출 ZIP: DOCX 3개·갱신기 예제 입력·승인 파일·동일 입력 재현 증거
+
+## 로컬 실행
+1. 저장소 파일을 모두 받습니다.
+2. 정적 사이트는 `python -m http.server 8000`을 실행한 뒤 http://localhost:8000 에서 확인합니다.
+3. 갱신 장치는 제출 ZIP의 `updater` 폴더에서 `python generate.py` 명령으로 실행합니다.
+
+## 보안 및 데이터
+공개 사이트에는 소설 원문, 동료 실명, 리추얼 전체 원문, API 키를 넣지 않았습니다. Supabase `aleph_common`의 **`br_a` 전용 스키마**를 생성하고 `site_publications`과 `generation_audits` 테이블에 RLS를 적용했습니다. 익명 사용자 및 일반 인증 사용자에게 해당 스키마와 테이블 접근 권한을 제공하지 않습니다. 사이트는 정적 렌더링이므로 DB 비밀키를 프런트엔드에 넣지 않습니다. 게시 내용은 검토한 정적 파일로만 반영합니다.
+
+## 자료 근거
+- 자기소개: T09 서사 및 T11 「그때의 나에게」의 실제 경험에 한정
+- 리추얼 기록: 2026-08-11 ~ 2026-10-16의 44일 아침 44건, 대시보드에 마무리 43건 (JSON에서 실제 내용 있는 항목 42건)
+- 출석: 2026-10-16 대시보드 기준 재적 44·출석 43·미확정 1·출석률 97.7%
+- 과제: T01~T11 핵심 과제 승인 후 BR-A 진행
+- T10: 공개 벤치마크 원자료 300건 가운데 60개 DoT 요약값의 2차 재분석. 직접 측정한 결과가 아니며 TTL 값의 실제 적용은 독립 검증하지 못함.
+
+## 최종 제출 전 직접 확인
+사이트의 첫 문장과 마지막 문장은 제출자가 직접 선택·수정해야 합니다. 동료 1명의 실제 독자 피드백은 자동 생성하지 않습니다. 공개 연락 수단으로 GitHub 프로필을 두었으며 실제 채용 지원용 이메일은 본인이 최종 결정해야 합니다.
