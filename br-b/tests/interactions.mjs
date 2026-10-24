@@ -71,7 +71,7 @@ pass('16/16 선택으로 표 2행',()=>assert.equal(get('data-body').children.le
 pass('현재 부하 및 세션 20개 갱신',()=>{assert.equal(get('selected-load').textContent,'16/16 부하');assert.ok(get('selected-count').textContent.includes('20개 세션'))});
 pass('지연 결과 보고 내용 갱신',()=>assert.ok(get('interpret-text').textContent.includes('0.2987ms')));
 press('metric','qps');
-pass('QPS 그래프 제목 변경',()=>assert.equal(get('chart-title').textContent,'부하별 평균 처리량 (QPS)'));
+pass('QPS 그래프 제목 변경',()=>assert.equal(get('chart-title').textContent,'부하별 초당 DNS 질의 수 (QPS)'));
 pass('QPS 그룹차 -7,055 표시',()=>assert.ok(get('delta-value').children[0].textContent.includes('-7,055')));
 get('download-csv').click();
 pass('CSV 다운로드 이벤트',()=>assert.equal(createdUrls.get('latestDownload').download,'DNS_Insight_T10_summary.csv'));
@@ -79,7 +79,7 @@ const csv=await createdUrls.get(createdUrls.get('latestDownload').href).text();
 pass('다운로드 CSV에는 선택한 2개 행만 포함',()=>assert.equal(csv.trim().split(/\r?\n/).length,3));
 get('download-report').click();
 const report=await createdUrls.get(createdUrls.get('latestDownload').href).text();
-pass('보고서에 선택 부하 16/16·지표 QPS 기록',()=>{assert.ok(report.includes('16/16'));assert.ok(report.includes('평균 처리량(QPS)'))});
+pass('보고서에 선택 부하 16/16·지표 QPS 기록',()=>{assert.ok(report.includes('16/16'));assert.ok(report.includes('초당 DNS 질의 수(QPS, 평균 처리량)'))});
 get('latency-input').value='abc';get('converter-form').listeners.submit({preventDefault(){}});
 pass('잘못된 입력은 오류 및 aria-invalid',()=>{assert.ok(get('converter-error').textContent.includes('숫자'));assert.equal(get('latency-input').attrs['aria-invalid'],'true')});
 get('latency-input').value='0.2958';get('converter-form').listeners.submit({preventDefault(){}});

@@ -35,10 +35,10 @@
     const rows = group(state.load);
     const key = state.metric;
     const maximum = key === 'latency' ? 0.65 : 330000;
-    safeText($('chart-title'), key === 'latency' ? '부하별 평균 응답시간' : '부하별 평균 처리량 (QPS)');
+    safeText($('chart-title'), key === 'latency' ? '부하별 평균 응답시간' : '부하별 초당 DNS 질의 수 (QPS)');
     safeText($('chart-desc'), key === 'latency'
-      ? '단위는 밀리초(ms)이며 낮은 값이 빠른 응답을 뜻합니다. 이 비교만으로 TTL의 효과를 판단할 수 없습니다.'
-      : '초당 처리 질의 수(QPS)이며 높은 값은 이 측정 환경에서의 높은 처리량을 뜻합니다.');
+      ? 'DNS 질의를 보낸 뒤 응답받기까지 걸린 평균 시간입니다. 짧을수록 빠르지만, 이 차이가 TTL 때문인지는 알 수 없습니다.'
+      : 'QPS는 1초 동안 처리한 DNS 질의 개수입니다. 높을수록 같은 시험 환경에서 더 많은 요청을 처리했다는 뜻입니다.');
     safeText($('chart-unit'), '단위: ' + unit(key));
     const host = $('chart');
     host.replaceChildren();
@@ -61,7 +61,7 @@
         bars.append(line);
       }
       const diff = compareRows(two, key);
-      const diffLabel = make('p', 'bar-delta', '기록값 차이 (3600 − 1): ' + (diff >= 0 ? '+' : '') + metricText(diff, key) + ' ' + unit(key));
+      const diffLabel = make('p', 'bar-delta', '두 그룹 평균의 차이 (3600 − 1): ' + (diff >= 0 ? '+' : '') + metricText(diff, key) + ' ' + unit(key));
       bars.append(diffLabel);
       block.append(labelBox, bars);
       host.append(block);
@@ -93,8 +93,8 @@
     safeText($('selected-load'), state.load === 'all' ? '전체 부하 비교' : state.load + ' 부하');
     safeText($('selected-count'), `${current.length}개 그룹 · ${current.reduce((n, x) => n + x.n, 0)}개 세션`);
     safeText($('delta-caption'), state.metric === 'latency'
-      ? 'TTL 3600초 − 1초 · ' + (state.load === 'all' ? '3개 부하' : state.load + ' 부하')
-      : 'QPS 기준 · TTL 3600초 − 1초');
+      ? '기록된 TTL 3600초 − 1초 · ' + (state.load === 'all' ? '3개 부하' : state.load + ' 부하')
+      : '초당 DNS 질의 수 차이 · TTL 3600초 − 1초');
   }
 
   function renderTable() {
@@ -114,14 +114,14 @@
 
   function renderInterpretation() {
     if (state.load === 'all') {
-      safeText($('interpret-title'), '부하가 증가한 조건에서 지연은 길고 QPS는 낮게 관찰됐습니다.');
-      safeText($('interpret-text'), '8/8에서 32/128로 바뀐 두 조건 레이블 모두 평균 응답시간이 약 0.25ms 길었고, 평균 QPS는 약 45% 낮았습니다. 스레드와 클라이언트가 함께 바뀌므로 원인을 분리할 수 없습니다.');
+      safeText($('interpret-title'), '부하 조건이 더 큰 그룹에서 응답은 느리고 초당 처리 건수는 적었습니다.');
+      safeText($('interpret-text'), '8/8과 32/128 조건을 비교하면 평균 응답시간은 약 0.25ms 더 길었고, 1초 동안 처리한 DNS 질의 수(QPS)는 약 45% 적었습니다. 스레드와 클라이언트 수를 동시에 바꾼 기록이므로 원인을 하나로 꼽을 수는 없습니다.');
     } else {
       const [a, b] = pair(state.load);
       const d = b.latency - a.latency;
       const dq = b.qps - a.qps;
-      safeText($('interpret-title'), `${state.load} 부하의 두 TTL 기록 그룹은 근접한 지연시간을 보였습니다.`);
-      safeText($('interpret-text'), `TTL 1초 ${a.latency.toFixed(4)}ms, 3,600초 ${b.latency.toFixed(4)}ms로, 3,600초 기록 그룹 평균이 ${d.toFixed(4)}ms 길었습니다. QPS 차이는 ${fmt.format(dq)}로 관찰됐습니다. 하지만 통계적으로 안정적인 차이는 확인되지 않았고, TTL의 실제 적용도 검증되지 않았습니다.`);
+      safeText($('interpret-title'), `${state.load} 조건에서는 두 TTL 그룹의 평균 응답시간이 비슷했습니다.`);
+      safeText($('interpret-text'), `TTL 1초로 기록된 그룹은 ${a.latency.toFixed(4)}ms, 3,600초로 기록된 그룹은 ${b.latency.toFixed(4)}ms입니다. 평균 차이는 ${d.toFixed(4)}ms입니다. 1초 동안 처리한 DNS 질의 수(QPS) 차이는 ${fmt.format(dq)}건이었습니다. 하지만 우연한 변동일 수도 있으며, 실제 TTL 설정 여부도 확인하지 못했습니다.`);
     }
   }
   function render() {
@@ -148,7 +148,7 @@
   function reportContent() {
     const rows = group(state.load);
     const selected = state.load === 'all' ? '전체 3개 부하' : state.load;
-    const selectedMetric = state.metric === 'latency' ? '평균 응답시간(ms)' : '평균 처리량(QPS)';
+    const selectedMetric = state.metric === 'latency' ? '평균 응답시간(ms)' : '초당 DNS 질의 수(QPS, 평균 처리량)';
     const table = rows.map((r) => `${r.load.padEnd(7)} | ${String(r.ttl).padEnd(4)} | ${String(r.n).padEnd(2)} | ${r.latency.toFixed(4)}ms | ${fmt.format(r.qps)} QPS`).join('\r\n');
     const explanation = state.load === 'all'
       ? '세 부하 모두 TTL 3600초 기록 그룹의 평균 지연시간은 1초 기록 그룹보다 0.0043~0.0093ms 길었습니다.'
@@ -159,17 +159,19 @@
     return `DNS BENCHMARK INSIGHT — T10 연구 기반 분석 요약\r\n` +
       `=====================================================\r\n`+
       `연구 제목: ${data.paper}\r\n`+
-      `대상: 공개 DNSperf 60개 10초 측정 세션의 2차 분석\r\n`+
+      `대상: 다른 연구자가 공개한 DNSperf 10초 시험 기록 60건을 재분석\r\n`+
       `현재 선택: 부하 ${selected} / 지표 ${selectedMetric}\r\n`+
       `고정 조건: DoT · HAProxy · 64 cores\r\n\r\n`+
-      `부하(T/C) | TTL(초) | n  | 평균 응답시간 | 평균 QPS\r\n${table}\r\n\r\n`+
+      `읽는 법: 평균 응답시간(ms)은 짧을수록 빠르고, QPS는 1초 동안 처리한 DNS 질의 수(높을수록 많음)입니다.\r\n`+
+      `부하(T/C) | TTL(초) | 시험 횟수 | 평균 응답시간 | 초당 DNS 질의 수(QPS)\r\n${table}\r\n\r\n`+
       `해석: ${explanation}\r\n`+
-      `그러나 탐색적 Welch 검정 Holm 보정 p값이 3개 부하 모두 0.05 이상이므로 유의한 차이를 확인하지 못했습니다.\r\n\r\n`+
-      `[반드시 지킬 연구 한계]\r\n`+
-      `- TTL은 기록용 메타데이터로, 실제 서버 적용 여부를 독립적으로 검증하지 못했습니다.\r\n`+
-      `- 캐시 HIT/MISS가 측정되지 않았으므로 DNS 캐시의 성능 효과를 뜻하지 않습니다.\r\n`+
-      `- 스레드와 클라이언트 수가 함께 변경되고 실험 순서도 무작위가 아니었습니다.\r\n`+
-      `- 원저자의 공개 데이터를 재분석했으며 직접 실험한 측정이 아닙니다.\r\n\r\n`+
+      `결론: 숫자 차이는 있지만 우연한 변동일 가능성을 배제할 수 없어 어느 TTL이 더 빠르다고 판단할 수 없습니다.\r\n`+
+      `상세 근거: Welch 검정 후 Holm 보정한 p값이 세 부하 모두 0.05 이상입니다.\r\n\r\n`+
+      `[이 결과를 해석할 때 주의할 점]\r\n`+
+      `- TTL 1초와 3600초는 자료에 기록된 분류값입니다. 실제 서버 적용 여부는 확인되지 않았습니다.\r\n`+
+      `- 캐시에서 바로 응답했는지(HIT), 새로 조회했는지(MISS) 기록이 없어 캐시의 효과를 알 수 없습니다.\r\n`+
+      `- 스레드 수와 클라이언트 수를 함께 바꿔 시험했고, 진행 순서도 무작위가 아니어서 차이의 원인을 구별할 수 없습니다.\r\n`+
+      `- 직접 측정한 결과가 아니라 다른 연구자의 공개 시험 기록을 다시 분석한 것입니다.\r\n\r\n`+
       `원본 고정 커밋: https://github.com/ranya-pch/DNS-performance/blob/${data.sourceCommit}/data/dnsperf_trials_all.csv\r\n`+
       `버전: v1.0.0 / BR-B\r\n`;
   }

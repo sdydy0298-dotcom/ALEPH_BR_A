@@ -46,5 +46,6 @@ check('비밀번호나 시크릿 문자열 없음',()=>{
  for(const v of [html,css,dataJs,appJs])assert.ok(!/-----BEGIN PRIVATE KEY-----|sk_live_|service_role=|password\s*=\s*['"][^'"]+/i.test(v));
 });
 check('T10 요약에는 원자료 각 행 저장하지 않음',()=>assert.ok(!dataJs.includes('avg_latency_s,cmd,')));
+check('QPS 쉬운 설명을 첫 화면에 제공',()=>{assert.ok(html.includes('1초 동안 처리한 DNS 질의 개수'));assert.ok(html.includes('논문의 통계 검사 방법 보기'))});
 console.log(`PASS: ${checks.length}/${checks.length} 정적·계산 로직 테스트 완료`);
 checks.forEach((x,i)=>console.log(`${i+1}. ${x}`));
